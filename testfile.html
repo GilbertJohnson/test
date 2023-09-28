@@ -1,0 +1,208 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no" />
+    <title>Map Example</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.44/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.44/esri/css/esri.css">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+	<style>
+		html,body{
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+		.buttons{
+		background-color: 	#9d9be1; 
+		color: white;
+		font-weight: bold;
+		cursor: pointer;
+		border-radius:5px;
+		
+		}
+		#search {
+		
+		position: absolute;
+		z-index: 999;
+		top: 20px;
+		left: 74px;
+		}
+		.pos{
+			position:absolute; 
+			border: 2px;
+			border-style: solid;
+			border-color:blue; 
+			z-Index:999;
+			background-color: #E6F7F2; 
+			display:none;
+			border-radius:5px;
+		}
+        #measureTool {
+            height: 50%;
+            width: 100%;
+        }
+		.closepanel{
+			background-color:gray;
+			height:32px;
+			border-radius:5px;
+			color:white;
+			text-align:center;
+			cursor: grab;
+			
+		}
+		.closebutton{
+			position:absolute;
+			top:0px;
+			right:0px;
+			border-radius: 2px;
+			background-color:gray;
+			height:31px;
+			
+		}
+		.minimise{
+			position:absolute;
+			top:0px;
+			right:24.8px;
+			border-radius: 2px;
+			background-color:gray;
+			height:31px;
+
+		}
+		
+		
+	</style>
+    <script src="https://js.arcgis.com/3.44/"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+	
+	<script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+</head>
+
+<body>
+		
+    <div id = "content" 
+         style="width:100%;height:100%;margin:0;">
+		   
+	   <button class = "buttons"id = 'ext' style="position:absolute; left:20px; top:150px;z-Index:999;" > Full Extent</button>
+	   
+	   <div id="search"></div>
+	   <button class="buttons" id = 'measure' onclick ='usemeasure()' style="position:absolute; left:20px; top:200px;z-Index:999;">Measure</button>
+	   
+	   <button class = "buttons" id = 'basemapButton' onclick='showpanel("basemapDiv")' style="position:absolute; left:20px; top:250px;z-Index:999;">Change Basemap</button>
+	   
+	   
+	   
+	   <button class = "buttons" onclick='showpanel("layerlistdiv")' style="position:absolute; left:20px; top:300px;z-Index:999">Layers</button>
+        
+		<button class="buttons" id = 'printmap' onclick='showpanel("printDiv")' style="position:absolute; left:20px; top:350px;z-Index:999;">Print Map</button>
+		
+		<button class="buttons" id = 'popupfButton' style="position:absolute; left:85px; top:70px;z-Index:999;background-color:green;">i</button>
+		
+		<button class="buttons" id = 'bufferButton' onclick='showpanel("bufferDiv")' style="position:absolute; left:20px; top:400px;z-Index:999;"> Create Buffer</button>
+		
+		<button class="buttons" id = 'aoiButton' onclick='showpanel("aoiDiv")' style="position:absolute; left:20px; top:450px;z-Index:999;">Area of Interest</button>
+		
+		<div id="mapdiv" style="height:100%;">
+			
+            <div id = "measureDiv" class="pos" style="right:100px; top:100px; width:20%">
+				<div class= "closepanel">Measurement Tool<button id="measureminimise" class="minimise">-</button><button id="measureclose" class="closebutton">X</button></div>
+				<div id="measurehide">
+                <div id="measureTool"></div></div>
+            </div>
+			
+			
+			<div id = "printDiv" class = "pos" style= "left:200px; top:550px; width:20%; ">
+			<div class="closepanel">Print Tool<button id="printminimise" class="minimise" >-</button><button class="closebutton" onclick="hidepanel('printDiv')" >X</button></div>
+			<div id="printhide">
+			<div style = "padding-top:25px;padding-left:25px"><div id="print_button" style="align-items:center" class="buttons">Select the page layout and print</div></div>
+			</div></div>
+			
+			
+			<div id = "basemapDiv" class = "pos" style=" left:180px; top:100px; z-Index:999;width:20%;height:auto;background-color: #E6F7F2">
+			<div class="closepanel">Basemap Selection<button id="basemapminimise" class="minimise" >-</button><button onclick="hidepanel('basemapDiv')" class="closebutton">X</button></div>
+                <div id="basemaphide" style = "padding-left:30px;overflow:scroll;top:32px;width:100%;height:408px">
+					<div id="basemapGallery" ></div>
+                </div>
+            </div>
+			
+			
+			<div id = "layerlistdiv" class = "pos" style="right:50px; top:550px; width:18%;">
+                 <div class="closepanel">Layer List<button id="layerlistminimise" class="minimise" >-</button><button onclick="hidepanel('layerlistdiv')" class="closebutton">X</button></div>
+				<div id="layerlisthide"><div id='layerList' ></div></div>
+                
+            </div>
+			
+			
+			<div id = "bufferDiv" class="pos" style="right:100px; top:100px; width:32%; height:auto">
+				<div class="closepanel">Buffer<button id="bufferminimise" class="minimise" >-</button><button id="bufferClose" onclick="hidepanel('bufferDiv')" class="closebutton">X</button></div>
+					<div id="bufferhide">
+						<br>
+						Select the Layer to draw buffer
+						<select id = "layerSelection">
+							<option value="Select a layer">------Select a layer------</option>
+						</select>
+						<br><br>
+						<div><b>Buffer Parameters</b></div>
+						Distance:&nbsp;<input type="text" id="distance" size="5" value="0" />
+						<select id="unit" style="width:100px;">
+							<option value="esriMiles">Miles</option>
+							<option value="esriFeet">Feet</option>
+							<option value="esriKilometers">Kilometers</option>
+							<option value="esriMeters">Meters</option>
+							<option value="esriNauticalMiles">Nautical Miles</option>
+							<option value="esriDegreeMinuteSeconds">Degrees (DMS)</option>
+						</select><br><br>
+						<button type="button" id="dobuffer" style="position:relative;left:5px;bottom:5px" class="buttons">start Buffer</button>
+						
+						<button  id="clearGraphics" style="position:relative;bottom:5px;left:5px" class="buttons">Reset all</button>
+					</div>
+            </div>
+			<div id="reportTable" style="position:absolute;left:10%;top:72%;width:80%;background-color:#E6F7F2;z-index:1000;display:none">
+				<div class="closepanel">Buffer area report:
+					 <button onclick="hidepanel('reportTable')" class="closebutton">X</button>
+					 <button id="reportminimise" class="minimise" >-</button>
+					</div>
+					<div id="statecount" ></div><button id="downloadexcel" class="buttons" style="position: absolute;top: 30px;right: 10px;"><a>Download CSV</a></button>
+				<div id = "report" style="position: relative;left:3%;width:95%;height: 150px;overflow-y: scroll;">
+					
+					<table id="reporttb" style="position: relative;overflow-y: scroll;" class="table table-bordered table-hover">
+						<thead  >
+							<tr class="table-primary" >
+								<th>State Name</th>
+								<th>Name in Hindi</th>
+								<th>State Area(sq.km)</th>
+								<th>State Code</th>
+							</tr>
+							<tbody>
+							</tbody>
+						</thead>
+					</table></div></div>
+        </div>
+		
+
+		<div id="aoiDiv" class="pos" style="right:100px; top:100px; width:340px;">
+			<div class="closepanel">Area of Interest - Select a state<button id="aoiminimise" class="minimise" >-</button>
+				<button id="zoomClose" onclick="hidepanel('aoiDiv')" class="closebutton">X</button></div>
+			<div id="aoihide" style="position: relative;left:10px;" >
+			<br>
+			Select the state to view
+				<select id = "stateSelection">
+					<option value="">------Select a State------</option>
+				</select>
+			<br>
+			<br>
+			<br>
+			<button class="buttons" id="zoomstate" style="position:relative;left:5px;bottom:5px;width:30%;" >View State</button>
+			</div>
+		</div>
+		
+    </div>
+	
+
+	<script src="testfile.js"></script>	
+</body>
+</html>
+
+
+
